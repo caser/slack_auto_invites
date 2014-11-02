@@ -1,4 +1,6 @@
 {
+	// Your slack community invite URL - i.e. 
+	"baseUrl": "https://YOUR_COMMUNITY.slack.com/api/users.admin.invite",
     // Comes from api_token in the source of https://___.slack.com/admin/invites/full
     "token": "SAMPLE_TOKEN"
 }

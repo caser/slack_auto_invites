@@ -13,10 +13,11 @@ import (
 )
 
 type Configuration struct {
-	Token string
+	BaseUrl string
+	Token   string
 }
 
-func importConfiguration() string {
+func importConfiguration() (string, string) {
 	file, _ := os.Open("conf.json")
 	decoder := json.NewDecoder(file)
 	configuration := Configuration{}
@@ -24,12 +25,10 @@ func importConfiguration() string {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	return configuration.Token
+	return configuration.BaseUrl, configuration.Token
 }
 
-func SetSlackToken(req *http.Request) {
-	token := importConfiguration()
-
+func SetSlackToken(req *http.Request, token string) {
 	q := req.URL.Query()
 	q.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -51,9 +50,11 @@ func SendInvite(r *http.Request, fname string, lname string, email string) strin
 	c := appengine.NewContext(r)
 	client := urlfetch.Client(c)
 
-	req, _ := http.NewRequest("POST", "https://gophers.slack.com/api/users.admin.invite?t=1414871617&", nil)
+	baseUrl, token := importConfiguration()
 
-	SetSlackToken(req)
+	req, _ := http.NewRequest("POST", baseUrl, nil)
+
+	SetSlackToken(req, token)
 	SetFormValues(req, fname, lname, email)
 
 	resp, err := client.Do(req)

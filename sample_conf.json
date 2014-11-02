@@ -1,0 +1,33 @@
+{
+    "cookies": [
+        {
+            "Name": "_ga",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "a",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "a-2621832485",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "a-2725022032",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "a-2817841753",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "a-2880540297",
+            "Value": "SAMPLE_COOKIE"
+        },
+        {
+            "Name": "fbm_569627156411038",
+            "Value": "base_domain=.slack.com"
+        }
+    ],
+    "token": "SAMPLE_TOKEN"
+}

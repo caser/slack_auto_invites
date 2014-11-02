@@ -1,48 +1,43 @@
-package main
+// package main
+
+package slack_auto_invites
 
 import (
+	"appengine"
+	"appengine/urlfetch"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
+type Configuration struct {
+	Cookies []http.Cookie
+	Token   string
+}
+
+func importConfiguration() ([]http.Cookie, string) {
+	file, _ := os.Open("conf.json")
+	decoder := json.NewDecoder(file)
+	configuration := Configuration{}
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	return configuration.Cookies, configuration.Token
+}
+
 func SetSlackCookies(req *http.Request) {
-	cookie1 := http.Cookie{
-		Name:  "_ga",
-		Value: "GA1.2.512403146.1409452713",
-	}
-	cookie2 := http.Cookie{
-		Name:  "a",
-		Value: "2621832485%2C2725022032%2C2817841753%2C2880540297",
-	}
-	cookie3 := http.Cookie{
-		Name:  "a-2621832485",
-		Value: "%2BoVYKJaTNZQlNR2XX6ApZRbeBvcjEzgyN7eWRyl8q6%2FLj0yXXOwCUf13BT49gjq6JcWpKLuq0%2F6cpaeiqOvvKQ%3D%3D",
-	}
-	cookie4 := http.Cookie{
-		Name:  "a-2725022032",
-		Value: "%2FVvZzuTNU2lbqPgzYsl528rmTd41ZLxX9%2B5xcsD4G6cNYpdvly5Mw1tt%2BdetiDSsUhlbmlgQdoHiST8avtRtnA%3D%3D",
-	}
-	cookie5 := http.Cookie{
-		Name:  "a-2817841753",
-		Value: "QDGu9OYAnKkjWmzTcMb7v9BJQHc2%2FZziyS4ej%2FPHgF2StHXuHQjXiC34Ks1I%2FR2wPnRT5jNYiVT5j%2FMrAObOQg%3D%3D",
-	}
-	cookie6 := http.Cookie{
-		Name:  "a-2880540297",
-		Value: "j7prH%2BmbALWAoy9Tblh%2BHa88cREjx5CxWpbTDxZcohU1tMuNrfsIr%2BA0TNDlM8tb4BlDwDjTmoqb3oYAALPc7A%3D%3D",
-	}
-	cookie7 := http.Cookie{
-		Name:  "fbm_569627156411038",
-		Value: "base_domain=.slack.com",
+	cookies, token := importConfiguration()
+
+	for _, cookie := range cookies {
+		req.AddCookie(&cookie)
 	}
 
-	req.AddCookie(&cookie1)
-	req.AddCookie(&cookie2)
-	req.AddCookie(&cookie3)
-	req.AddCookie(&cookie4)
-	req.AddCookie(&cookie5)
-	req.AddCookie(&cookie6)
-	req.AddCookie(&cookie7)
+	q := req.URL.Query()
+	q.Set("token", token)
+	req.URL.RawQuery = q.Encode()
 }
 
 func SetFormValues(req *http.Request, fname string, lname string, email string) {
@@ -50,21 +45,21 @@ func SetFormValues(req *http.Request, fname string, lname string, email string) 
 	q.Set("first_name", fname)
 	q.Set("last_name", lname)
 	q.Set("email", email)
-	q.Set("token", "xoxs-2331842482-2725022032-2725022108-1e80107e17")
 	q.Set("set_active", "true")
 	q.Set("_attempts", "1")
 	req.URL.RawQuery = q.Encode()
 }
 
-func main() {
-	client := &http.Client{}
+func SendInvite(r *http.Request, fname string, lname string, email string) string {
+	// client := &http.Client{}
+
+	c := appengine.NewContext(r)
+	client := urlfetch.Client(c)
+
 	req, _ := http.NewRequest("POST", "https://gophers.slack.com/api/users.admin.invite?t=1414871617&", nil)
 
 	SetSlackCookies(req)
-	SetFormValues(req, "Casey", "Rosengren", "caseyrosengren+5@gmail.com")
-
-	// fmt.Println(req.URL)
-	// fmt.Println(req.Cookies())
+	SetFormValues(req, fname, lname, email)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -77,5 +72,26 @@ func main() {
 		fmt.Println("Reading of response error is: ", err)
 	}
 
-	fmt.Println(string(body))
+	return string(body)
+	// TODO - add error checking for body of response
+	// success: {"ok":true}
+	// failure: {"ok":false,"error":"already_in_team"}
+}
+
+func inviteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.FormValue("fname") != "" && r.FormValue("lname") != "" && r.FormValue("email") != "" {
+		fname := r.FormValue("fname")
+		lname := r.FormValue("lname")
+		email := r.FormValue("email")
+
+		slack_resp := SendInvite(r, fname, lname, email)
+		fmt.Fprintf(w, slack_resp)
+	} else {
+		fmt.Fprintf(w, "No form values given. Please supply first name, last name, and email.")
+	}
+}
+
+func init() {
+	// func main() {
+	http.HandleFunc("/", inviteHandler)
 }

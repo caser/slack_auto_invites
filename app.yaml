@@ -1,0 +1,26 @@
+# application is mandatory
+# later on the web, we might use some other name
+application: slack-auto-invites
+
+# version is mandatory
+version: 1-0
+
+# runtime is mandatory
+runtime: go
+
+# api_version is mandatory
+api_version: go1
+
+# handlers is mandatory
+handlers:
+- url: /.*
+  script: _go_app
+
+
+skip_files:
+- ^(.*/)?#.*#$
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*/RCS/.*$
+- ^(.*/)?\..*$
+- sample_conf.json

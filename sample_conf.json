@@ -1,3 +1,4 @@
 {
+    // Comes from api_token in the source of https://___.slack.com/admin/invites/full
     "token": "SAMPLE_TOKEN"
 }

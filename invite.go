@@ -13,11 +13,10 @@ import (
 )
 
 type Configuration struct {
-	Cookies []http.Cookie
-	Token   string
+	Token string
 }
 
-func importConfiguration() ([]http.Cookie, string) {
+func importConfiguration() string {
 	file, _ := os.Open("conf.json")
 	decoder := json.NewDecoder(file)
 	configuration := Configuration{}
@@ -25,15 +24,11 @@ func importConfiguration() ([]http.Cookie, string) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	return configuration.Cookies, configuration.Token
+	return configuration.Token
 }
 
-func SetSlackCookies(req *http.Request) {
-	cookies, token := importConfiguration()
-
-	for _, cookie := range cookies {
-		req.AddCookie(&cookie)
-	}
+func SetSlackToken(req *http.Request) {
+	token := importConfiguration()
 
 	q := req.URL.Query()
 	q.Set("token", token)
@@ -58,7 +53,7 @@ func SendInvite(r *http.Request, fname string, lname string, email string) strin
 
 	req, _ := http.NewRequest("POST", "https://gophers.slack.com/api/users.admin.invite?t=1414871617&", nil)
 
-	SetSlackCookies(req)
+	SetSlackToken(req)
 	SetFormValues(req, fname, lname, email)
 
 	resp, err := client.Do(req)
